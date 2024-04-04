@@ -20,15 +20,10 @@ class Node {
       visited = true;
     }
 
-    bool createOpening (int dir) {
-      if(dir<4) walls[dir] = true;
-      return walls[dir];
-    }
 };
 
 class Maze{
   private:
-    int row, col;
     vector<vector<Node>> maze;
 
 
@@ -61,7 +56,7 @@ class Maze{
       int x = i/3;
       int y = j/6;
 
-      return maze[x][y].walls[1];
+      return maze[x][y].walls[3];
     }
 
 
@@ -98,10 +93,26 @@ class Maze{
       for(pair<int,int> next: list) {
         int x_new = next.first, y_new = next.second;
         if(!maze[x_new][y_new].visited) {
-          if(x_new == x+1) maze[x+1][y].walls[0]=false;
-          if(x_new == x-1) maze[x][y].walls[0]=false;
-          if(y_new == y+1) maze[x][y+1].walls[1]=false;
-          if(y_new == y-1) maze[x][y].walls[1]=false;
+
+          if(x_new == x+1) {
+            maze[x+1][y].walls[0]=false;
+            maze[x][y].walls[2]=false;  
+          }
+
+          if(x_new == x-1) {
+            maze[x][y].walls[0]=false;
+            maze[x-1][y].walls[2]=false;  
+          }
+
+          if(y_new == y+1) {
+            maze[x][y+1].walls[3]=false;
+            maze[x][y].walls[1]=false;  
+          }
+
+          if(y_new == y-1) {
+            maze[x][y].walls[3]=false;
+            maze[x][y-1].walls[1]=false;
+            }
 
           is_gen = true;
           nodes_visited++;
@@ -119,6 +130,8 @@ class Maze{
     }
 
   public:
+    int row, col;
+
     Maze(int r=5, int c=7) {
       row = r;
       col = c;
@@ -132,6 +145,10 @@ class Maze{
       }
 
       generate_maze();
+    }
+
+    bool is_wall_close(int x, int y, int dir) {
+      return maze[x][y].walls[dir];
     }
 
     void show_maze(vector<pair<int,int>> v = vector<pair<int,int>>()) {
@@ -165,11 +182,72 @@ class Maze{
     }
 };
 
+vector<pair<int,int>> solve_maze(Maze m) {
+  vector<pair<int,int>> stk;
+  int visited[m.row][m.col] = {};
+  pair<int,int> initial_node(0,0), final_node(m.row-1, m.col-1), curr;
+
+  stk.push_back(initial_node);
+
+  while(!stk.empty() && (curr = stk.back()) != final_node) {
+    int x = curr.first, y = curr.second;
+
+    if(visited[x][y] == 0) {   // Check the node above
+      visited[x][y]++;
+      if(x != 0 && !m.is_wall_close(x,y,0) && visited[x-1][y] == 0) {
+        stk.push_back(pair<int,int>(x-1,y));
+        continue;
+      }
+    }
+
+    if(visited[x][y] == 1) {    // Check the node to right
+      visited[x][y]++;
+      if(y != m.col-1 && !m.is_wall_close(x,y,1) && visited[x][y+1] == 0) {
+        stk.push_back(pair<int,int>(x,y+1));
+        continue;
+      }
+    }
+
+    if(visited[x][y] == 2) {    // Check the node below
+      visited[x][y]++;
+      if(x != m.row-1 && !m.is_wall_close(x,y,2) && visited[x+1][y] == 0) {
+        stk.push_back(pair<int,int>(x+1,y));
+        continue;
+      }
+    }
+
+    if(visited[x][y] == 3) {    // Check the node to left
+      visited[x][y]++;
+      if(y != 0 && !m.is_wall_close(x,y,3) && visited[x][y-1] == 0) {
+        stk.push_back(pair<int,int>(x,y-1));
+        continue;
+      }
+    }
+
+    stk.pop_back();             // No path to go further. Backtrack
+
+  }
+
+  return stk;
+}
 
 int main()
-{
-  Maze m(10,16);
+{ 
+  int r,c;
+  cout<<"Enter rows and cols: ";
+  cin>>r>>c;
+  Maze m(r,c);
 
   m.show_maze();
-  cout<<"done";
+  char disp;
+  cout<<"\nDisplay solved maze (y/n)? ";
+  cin>>disp;
+
+  if(disp=='Y' || disp=='y')
+  {
+    cout<<"\n\n\nSolved maze: ";
+    vector<pair<int,int>> res = solve_maze(m);
+    m.show_maze(res);
+  }
+  cout<<"\n\n";
 }
