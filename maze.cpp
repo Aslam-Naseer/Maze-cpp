@@ -1,5 +1,3 @@
-//N E S W 
-
 #include <random> 
 #include <iostream> 
 #include<stack>
@@ -10,24 +8,14 @@ using namespace std;
 
 class Node {
     public:
-
-    bool walls[4] = {true, true, true, true}, visited;
-    Node() {
-      visited = false;
-    }
-
-    void visit() {
-      visited = true;
-    }
-
+    bool walls[4] = {true, true, true, true}, visited = false;
 };
 
 class Maze{
   private:
     vector<vector<Node>> maze;
 
-
-    // node related methods
+    // methods to find weather coordinates are part of wall
 
     bool is_perp(int i,int j) {
       return i%3==0 && j%6==0;
@@ -50,6 +38,9 @@ class Maze{
       if(j%6 != 0)
         return false;
 
+      if(j==0 && i/3 == 0 || j==6*col && i/3 == row-1)
+        return false;
+
       if(j==0 || j==6*col)
         return true;
 
@@ -60,9 +51,10 @@ class Maze{
     }
 
 
-    // maze generation methods
+    // Find neighbors possible for a node in random order
 
     vector<pair<int,int>> find_neigbours(int x, int y){
+
       random_device rd;
       mt19937 gen(rd());
 
@@ -76,61 +68,68 @@ class Maze{
       return list;
     }
 
-    //Main maze generation method
+
+    // Main maze generation method
+
     bool generate_maze() {
-    stack<pair<int,int>> stk;
-    stk.push(pair<int,int>(0,0));
-    int nodes_visited = 0;
 
-    while(!stk.empty() && nodes_visited < row*col) {
-      pair<int,int> curr = stk.top();
-      int x = curr.first,y = curr.second;
-      maze[x][y].visited = true;
+      stack<pair<int,int>> stk;
+      stk.push(pair<int,int>(0,0));
+      int nodes_visited = 0;
 
-      bool is_gen = false; 
-      vector<pair<int,int>> list = find_neigbours(x,y);
+      while(!stk.empty() && nodes_visited < row*col) {
+        pair<int,int> curr = stk.top();
+        int x = curr.first,y = curr.second;
+        maze[x][y].visited = true;
 
-      for(pair<int,int> next: list) {
-        int x_new = next.first, y_new = next.second;
-        if(!maze[x_new][y_new].visited) {
+        bool is_gen = false; 
+        vector<pair<int,int>> list = find_neigbours(x,y);
 
-          if(x_new == x+1) {
-            maze[x+1][y].walls[0]=false;
-            maze[x][y].walls[2]=false;  
-          }
 
-          if(x_new == x-1) {
-            maze[x][y].walls[0]=false;
-            maze[x-1][y].walls[2]=false;  
-          }
+        // Find the first unvisited neighbour to traverse
 
-          if(y_new == y+1) {
-            maze[x][y+1].walls[3]=false;
-            maze[x][y].walls[1]=false;  
-          }
+        for(pair<int,int> next: list) {                       
+          int x_new = next.first, y_new = next.second;
+          if(!maze[x_new][y_new].visited) {
 
-          if(y_new == y-1) {
-            maze[x][y].walls[3]=false;
-            maze[x][y-1].walls[1]=false;
+            if(x_new == x+1) {
+              maze[x+1][y].walls[0]=false;
+              maze[x][y].walls[2]=false;  
             }
 
-          is_gen = true;
-          nodes_visited++;
-          stk.push(pair<int,int>(x_new,y_new));
-          break;
+            if(x_new == x-1) {
+              maze[x][y].walls[0]=false;
+              maze[x-1][y].walls[2]=false;  
+            }
+
+            if(y_new == y+1) {
+              maze[x][y+1].walls[3]=false;
+              maze[x][y].walls[1]=false;  
+            }
+
+            if(y_new == y-1) {
+              maze[x][y].walls[3]=false;
+              maze[x][y-1].walls[1]=false;
+              }
+
+            is_gen = true;
+            nodes_visited++;
+            stk.push(pair<int,int>(x_new,y_new));
+            break;
+          }
         }
+
+        if(!is_gen)    // If no neighbor availiable to traverse, backtrack
+          stk.pop();
       }
-
-      if(!is_gen) 
-        stk.pop();
-    }
-    
-
-    return true;
+      
+      return true;
     }
 
   public:
     int row, col;
+
+    // Constructor to initialise and generate the maze
 
     Maze(int r=5, int c=7) {
       row = r;
@@ -144,12 +143,14 @@ class Maze{
         maze.push_back(row);
       }
 
-      generate_maze();
+      bool generated = generate_maze();
+      if(!generated) {
+        cout<<"Error! Try again..";
+      }
     }
 
-    bool is_wall_close(int x, int y, int dir) {
-      return maze[x][y].walls[dir];
-    }
+
+    // Display maze, while marking the coordinates passed in argument vector
 
     void show_maze(vector<pair<int,int>> v = vector<pair<int,int>>()) {
 
@@ -171,6 +172,13 @@ class Maze{
       cout<<"\n";
     }
 
+
+    //Misc methods
+    
+    bool is_wall_close(int x, int y, int dir) {
+      return maze[x][y].walls[dir];
+    }
+
     void show_visited() {
       cout<<endl;
       for(int i=0;i<row;i++) {
@@ -181,6 +189,8 @@ class Maze{
       }
     }
 };
+
+// Function to solve maze
 
 vector<pair<int,int>> solve_maze(Maze m) {
   vector<pair<int,int>> stk;
