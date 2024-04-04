@@ -134,7 +134,8 @@ class Maze{
       generate_maze();
     }
 
-    void show_maze() {
+    void show_maze(vector<pair<int,int>> v = vector<pair<int,int>>()) {
+
       for(int i=0; i<(3*row + 1); i++){
         cout<<endl;
         for(int j=0; j<(6*col + 1); j++) {
@@ -144,7 +145,9 @@ class Maze{
             cout << "-"; 
           else if (is_vertical(i,j) )
             cout << "|";
-          else 
+          else if(find(v.begin(),v.end(), pair<int,int>(i/3, j/6)) != v.end())
+            cout<<".";
+          else
             cout<<" ";
         }
       }
@@ -166,6 +169,7 @@ class Maze{
 int main()
 {
   Maze m(10,16);
+
   m.show_maze();
   cout<<"done";
 }
