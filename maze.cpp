@@ -11,7 +11,7 @@ using namespace std;
 class Node {
     public:
 
-    bool walls[4] = {false, false, true, true}, visited;
+    bool walls[4] = {true, true, true, true}, visited;
     Node() {
       visited = false;
     }
@@ -61,7 +61,6 @@ class Maze{
       int x = i/3;
       int y = j/6;
 
-
       return maze[x][y].walls[1];
     }
 
@@ -99,10 +98,10 @@ class Maze{
       for(pair<int,int> next: list) {
         int x_new = next.first, y_new = next.second;
         if(!maze[x_new][y_new].visited) {
-          if(x_new == x+1) maze[x+1][y].walls[0]=true;
-          if(x_new == x-1) maze[x][y].walls[0]=true;
-          if(y_new == y+1) maze[x][y].walls[1]=true;
-          if(y_new == y+1) maze[x][y+1].walls[1]=true;
+          if(x_new == x+1) maze[x+1][y].walls[0]=false;
+          if(x_new == x-1) maze[x][y].walls[0]=false;
+          if(y_new == y+1) maze[x][y+1].walls[1]=false;
+          if(y_new == y-1) maze[x][y].walls[1]=false;
 
           is_gen = true;
           nodes_visited++;
@@ -136,7 +135,6 @@ class Maze{
     }
 
     void show_maze() {
-      cout<<row<<col<<endl;
       for(int i=0; i<(3*row + 1); i++){
         cout<<endl;
         for(int j=0; j<(6*col + 1); j++) {
@@ -154,6 +152,7 @@ class Maze{
     }
 
     void show_visited() {
+      cout<<endl;
       for(int i=0;i<row;i++) {
         for(int j=0; j<col; j++) {
           cout<<maze[i][j].visited<<" ";
@@ -163,9 +162,10 @@ class Maze{
     }
 };
 
+
 int main()
 {
-  Maze m(5,7);
+  Maze m(10,16);
   m.show_maze();
   cout<<"done";
 }
