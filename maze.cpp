@@ -1,8 +1,10 @@
 //N E S W 
 
-#include<iostream>
+#include <random> 
+#include <iostream> 
 #include<stack>
 #include<vector>
+#include<algorithm>
 
 using namespace std;
 
@@ -28,6 +30,9 @@ class Maze{
   private:
     int row, col;
     vector<vector<Node>> maze;
+
+
+    // node related methods
 
     bool is_perp(int i,int j) {
       return i%3==0 && j%6==0;
@@ -60,8 +65,62 @@ class Maze{
       return maze[x][y].walls[1];
     }
 
+
+    // maze generation methods
+
+    vector<pair<int,int>> find_neigbours(int x, int y){
+      random_device rd;
+      mt19937 gen(rd());
+
+      vector<pair<int,int>> list;
+      if(x != 0) list.push_back(pair<int,int>(x-1,y));
+      if(y != 0) list.push_back(pair<int,int>(x,y-1));
+      if(x != row-1) list.push_back(pair<int,int>(x+1,y));
+      if(y != col-1) list.push_back(pair<int,int>(x,y+1));
+      
+      shuffle(list.begin(), list.end(), gen);
+      return list;
+    }
+
+    //Main maze generation method
+    bool generate_maze() {
+    stack<pair<int,int>> stk;
+    stk.push(pair<int,int>(0,0));
+    int nodes_visited = 0;
+
+    while(!stk.empty() && nodes_visited < row*col) {
+      pair<int,int> curr = stk.top();
+      int x = curr.first,y = curr.second;
+      maze[x][y].visited = true;
+
+      bool is_gen = false; 
+      vector<pair<int,int>> list = find_neigbours(x,y);
+
+      for(pair<int,int> next: list) {
+        int x_new = next.first, y_new = next.second;
+        if(!maze[x_new][y_new].visited) {
+          if(x_new == x+1) maze[x+1][y].walls[0]=true;
+          if(x_new == x-1) maze[x][y].walls[0]=true;
+          if(y_new == y+1) maze[x][y].walls[1]=true;
+          if(y_new == y+1) maze[x][y+1].walls[1]=true;
+
+          is_gen = true;
+          nodes_visited++;
+          stk.push(pair<int,int>(x_new,y_new));
+          break;
+        }
+      }
+
+      if(!is_gen) 
+        stk.pop();
+    }
+    
+
+    return true;
+    }
+
   public:
-    Maze(int r=25, int c=40) {
+    Maze(int r=5, int c=7) {
       row = r;
       col = c;
 
@@ -72,6 +131,8 @@ class Maze{
         }
         maze.push_back(row);
       }
+
+      generate_maze();
     }
 
     void show_maze() {
@@ -104,13 +165,7 @@ class Maze{
 
 int main()
 {
-  int row, col;
-  cout << "Row: ";
-  cin >> row;
-  cout << "Column: ";
-  cin >> col;
-
-  Maze m(row, col);
+  Maze m(5,7);
   m.show_maze();
   cout<<"done";
 }
